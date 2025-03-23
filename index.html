@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terminal Portfolio</title>
+    <style>
+      :root {
+        /* Catppuccin Mocha colors */
+        --ctp-base: #1e1e2e;
+        --ctp-surface0: #313244;
+        --ctp-surface1: #45475a;
+        --ctp-surface2: #585b70;
+        --ctp-text: #cdd6f4;
+        --ctp-subtext0: #a6adc8;
+        --ctp-subtext1: #bac2de;
+        --ctp-overlay0: #6c7086;
+        --ctp-overlay1: #7f849c;
+        --ctp-blue: #89b4fa;
+        --ctp-lavender: #b4befe;
+        --ctp-green: #a6e3a1;
+        --ctp-peach: #fab387;
+        --ctp-mauve: #cba6f7;
+        --ctp-maroon: #eba0ac;
+        --ctp-red: #f38ba8;
+        --ctp-yellow: #f9e2af;
+        --ctp-pink: #f5c2e7;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Courier New", monospace;
+      }
+
+      body {
+        background-color: #24273a;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .terminal-window {
+        width: 800px;
+        height: 500px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        resize: both;
+      }
+
+      .terminal-toolbar {
+        height: 32px;
+        background-color: var(--ctp-surface0);
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        cursor: move;
+      }
+
+      .window-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .window-button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .close-button {
+        background-color: var(--ctp-red);
+      }
+
+      .minimize-button {
+        background-color: var(--ctp-yellow);
+      }
+
+      .maximize-button {
+        background-color: var(--ctp-green);
+      }
+
+      .terminal-title {
+        margin-left: 10px;
+        font-size: 14px;
+        color: var(--ctp-subtext0);
+        flex-grow: 1;
+        text-align: center;
+      }
+
+      .terminal-content {
+        height: calc(100% - 32px);
+        background-color: var(--ctp-base);
+        padding: 10px;
+        color: var(--ctp-text);
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--ctp-surface1) var(--ctp-base);
+      }
+
+      /* Custom scrollbar styles */
+      .terminal-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .terminal-content::-webkit-scrollbar-track {
+        background: var(--ctp-base);
+      }
+
+      .terminal-content::-webkit-scrollbar-thumb {
+        background-color: var(--ctp-surface1);
+        border-radius: 10px;
+        border: 2px solid var(--ctp-base);
+      }
+
+      .terminal-content::-webkit-scrollbar-thumb:hover {
+        background-color: var(--ctp-surface2);
+      }
+
+      .command-line {
+        display: flex;
+        margin-bottom: 5px;
+      }
+
+      .prompt {
+        color: var(--ctp-green);
+        margin-right: 10px;
+      }
+
+      .command {
+        color: var(--ctp-text);
+      }
+
+      .output {
+        margin-bottom: 15px;
+        white-space: pre-wrap;
+      }
+
+      .highlight {
+        color: var(--ctp-lavender);
+      }
+
+      .peach {
+        color: var(--ctp-peach);
+      }
+
+      .blue {
+        color: var(--ctp-blue);
+      }
+
+      .mauve {
+        color: var(--ctp-mauve);
+      }
+
+      .typing {
+        border-right: 2px solid var(--ctp-text);
+        animation: blink 1s step-end infinite;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .section-title {
+        color: var(--ctp-mauve);
+        margin: 10px 0;
+        border-bottom: 1px solid var(--ctp-surface1);
+        padding-bottom: 5px;
+      }
+
+      .input-line {
+        display: flex;
+        margin-top: 10px;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 15px;
+        background-color: var(--ctp-text);
+        animation: blink 1s step-end infinite;
+        margin-left: 2px;
+        position: relative;
+        top: 2px;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      .project-item {
+        margin-bottom: 10px;
+        padding-left: 15px;
+      }
+
+      .project-title {
+        color: var(--ctp-blue);
+        font-weight: bold;
+      }
+
+      .project-description {
+        color: var(--ctp-subtext1);
+        padding-left: 15px;
+      }
+
+      .tech-stack {
+        color: var(--ctp-peach);
+        padding-left: 15px;
+      }
+
+      a {
+        color: var(--ctp-lavender);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background-color: var(--ctp-surface1);
+        border-radius: 3px;
+        margin: 5px 0;
+        width: 200px;
+      }
+
+      .progress {
+        height: 100%;
+        border-radius: 3px;
+        background-color: var(--ctp-lavender);
+      }
+
+      .ascii-art {
+        color: var(--ctp-mauve);
+        font-size: 12px;
+        line-height: 1.2;
+        margin: 10px 0;
+        white-space: pre;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="terminal-window">
+      <div class="terminal-toolbar" id="toolbar">
+        <div class="window-buttons">
+          <div class="window-button close-button"></div>
+          <div class="window-button minimize-button"></div>
+          <div class="window-button maximize-button"></div>
+        </div>
+        <div class="terminal-title">portfolio.sh</div>
+      </div>
+      <div class="terminal-content" id="terminal">
+        <div class="ascii-art">
+████████╗███████╗███╗   ███╗██╗███╗   ██╗ █████╗ ██╗         
+╚══██╔══╝██╔════╝████╗ ████║██║████╗  ██║██╔══██╗██║         
+   ██║   █████╗  ██╔████╔██║██║██╔██╗ ██║███████║██║         
+   ██║   ██╔══╝  ██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║         
+   ██║   ███████╗██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗    
+   ╚═╝   ╚══════╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝    
+                                                             
+██████╗  ██████╗ ██████╗ ████████╗███████╗ ██████╗ ██╗     ██╗ ██████╗ 
+██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝██╔═══██╗██║     ██║██╔═══██╗
+██████╔╝██║   ██║██████╔╝   ██║   █████╗  ██║   ██║██║     ██║██║   ██║
+██╔═══╝ ██║   ██║██╔══██╗   ██║   ██╔══╝  ██║   ██║██║     ██║██║   ██║
+██║     ╚██████╔╝██║  ██║   ██║   ██║     ╚██████╔╝███████╗██║╚██████╔╝
+╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝      ╚═════╝ ╚══════╝╚═╝ ╚═════╝ 
+        </div>
+        <div class="output">Welcome to my terminal portfolio! Type <span class="highlight">help</span> to view available commands.</div>
+        <div class="output">This is a fictional portfolio for practice and demonstration.</div>
+
+        <div class="command-line">
+          <span class="prompt">guest@portfolio:~$</span>
+          <span class="command" id="activeCommand"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Terminal functionality
+      const terminal = document.getElementById("terminal");
+      let activeCommand = document.getElementById("activeCommand");
+      let currentCommand = "";
+      let commandHistory = [];
+      let historyIndex = -1;
+      let userCanType = false; // Flag to control when user can type
+
+      // Make terminal draggable
+      const terminalWindow = document.querySelector(".terminal-window");
+      const toolbar = document.getElementById("toolbar");
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      // Initialize with absolute positioning instead of transform
+      window.addEventListener("load", () => {
+        // Get the initial centered position
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const terminalWidth = terminalWindow.offsetWidth;
+        const terminalHeight = terminalWindow.offsetHeight;
+
+        // Calculate the centered position
+        const initialLeft = (windowWidth - terminalWidth) / 2;
+        const initialTop = (windowHeight - terminalHeight) / 2;
+
+        // Set initial position with absolute values
+        terminalWindow.style.transform = "none";
+        terminalWindow.style.left = `${initialLeft}px`;
+        terminalWindow.style.top = `${initialTop}px`;
+      });
+
+      toolbar.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        const rect = terminalWindow.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+          const x = e.clientX - offsetX;
+          const y = e.clientY - offsetY;
+
+          // Keep window within viewport boundaries
+          const maxX = window.innerWidth - terminalWindow.offsetWidth;
+          const maxY = window.innerHeight - terminalWindow.offsetHeight;
+
+          terminalWindow.style.left = `${Math.max(0, Math.min(maxX, x))}px`;
+          terminalWindow.style.top = `${Math.max(0, Math.min(maxY, y))}px`;
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+
+      // Command processors
+      const commands = {
+        help: () => {
+          return `
+<div class="section-title">AVAILABLE COMMANDS</div>
+
+<span class="highlight">help</span>           - Show this help message
+<span class="highlight">about</span>          - Display information about me
+<span class="highlight">skills</span>         - List my technical skills
+<span class="highlight">projects</span>       - View my portfolio projects
+<span class="highlight">contact</span>        - Get my contact information
+<span class="highlight">experience</span>     - View my work experience
+<span class="highlight">education</span>      - View my education background
+<span class="highlight">clear</span>          - Clear the terminal
+`;
+        },
+
+        about: () => {
+          return `
+<div class="section-title">ABOUT ME</div>
+Hello! I'm a passionate software developer with experience in full-stack development.
+I enjoy solving complex problems and creating intuitive user experiences.
+
+My journey in technology began when I first discovered the joy of creating something
+from nothing but code. Since then, I've been on a continuous learning path,
+exploring new technologies and methodologies.
+
+When I'm not coding, you can find me hiking in nature, reading tech blogs,
+or experimenting with new programming languages and frameworks.
+`;
+        },
+
+        skills: () => {
+          return `
+<div class="section-title">TECHNICAL SKILLS</div>
+
+<span class="peach">Languages:</span>
+JavaScript/TypeScript <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+Python <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+Java <div class="progress-bar"><div class="progress" style="width: 75%"></div></div>
+SQL <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+HTML/CSS <div class="progress-bar"><div class="progress" style="width: 95%"></div></div>
+
+<span class="blue">Frameworks & Libraries:</span>
+React <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+Node.js <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+Express <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+Django <div class="progress-bar"><div class="progress" style="width: 75%"></div></div>
+TailwindCSS <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+
+<span class="mauve">Tools & Platforms:</span>
+Git/GitHub <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+Docker <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+AWS <div class="progress-bar"><div class="progress" style="width: 75%"></div></div>
+CI/CD <div class="progress-bar"><div class="progress" style="width: 70%"></div></div>
+Agile/Scrum <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+`;
+        },
+
+        projects: () => {
+          return `
+<div class="section-title">PORTFOLIO PROJECTS</div>
+
+<div class="project-item">
+  <div class="project-title">E-Commerce Platform</div>
+  <div class="project-description">A full-featured online shopping platform with user authentication, product catalog, shopping cart, and payment processing.</div>
+  <div class="tech-stack">React, Node.js, Express, MongoDB, Stripe API</div>
+</div>
+
+<div class="project-item">
+  <div class="project-title">AI Task Manager</div>
+  <div class="project-description">Smart task management application that uses AI to categorize, prioritize, and suggest optimal scheduling for tasks.</div>
+  <div class="tech-stack">Python, Django, TensorFlow, React</div>
+</div>
+
+<div class="project-item">
+  <div class="project-title">Real-Time Chat Application</div>
+  <div class="project-description">Instant messaging platform with real-time updates, user presence indicators, and end-to-end encryption.</div>
+  <div class="tech-stack">TypeScript, Socket.io, React, Redux, Node.js</div>
+</div>
+
+<div class="project-item">
+  <div class="project-title">Weather Dashboard</div>
+  <div class="project-description">Interactive weather visualization tool with location-based forecasts, historical data comparison, and weather alerts.</div>
+  <div class="tech-stack">JavaScript, D3.js, Weather API, HTML5 Canvas</div>
+</div>
+`;
+        },
+
+        contact: () => {
+          return `
+<div class="section-title">CONTACT INFORMATION</div>
+
+<span class="peach">Email:</span> developer@example.com
+<span class="blue">LinkedIn:</span> <a href="#">linkedin.com/in/developer</a>
+<span class="mauve">GitHub:</span> <a href="#">github.com/developer</a>
+<span class="green">Portfolio:</span> <a href="#">developer-portfolio.com</a>
+<span class="yellow">Twitter:</span> <a href="#">@developer_handle</a>
+
+Feel free to reach out for collaboration opportunities, job inquiries, or just to chat about technology!
+`;
+        },
+
+        experience: () => {
+          return `
+<div class="section-title">WORK EXPERIENCE</div>
+
+<span class="highlight">Senior Software Engineer</span> | Tech Innovations Inc.
+<span class="peach">January 2023 - Present</span>
+• Led development of microservices architecture using Node.js and Kubernetes
+• Improved application performance by 40% through code optimization and caching strategies
+• Mentored junior developers and conducted technical interviews
+• Implemented CI/CD pipelines reducing deployment time by 50%
+
+<span class="highlight">Full Stack Developer</span> | Digital Solutions Co.
+<span class="peach">June 2020 - December 2022</span>
+• Developed and maintained multiple web applications using React and Django
+• Collaborated with UX designers to implement responsive and accessible interfaces
+• Optimized database queries resulting in 30% faster load times
+• Participated in agile development processes including daily standups and sprint planning
+
+<span class="highlight">Junior Web Developer</span> | WebTech Startup
+<span class="peach">January 2019 - May 2020</span>
+• Built and maintained client websites using JavaScript, HTML, and CSS
+• Implemented responsive designs and ensured cross-browser compatibility
+• Collaborated with the marketing team to implement SEO best practices
+• Created custom WordPress themes and plugins for client needs
+`;
+        },
+
+        education: () => {
+          return `
+<div class="section-title">EDUCATION</div>
+
+<span class="highlight">Master of Computer Science</span>
+<span class="peach">University of Technology | 2017 - 2019</span>
+• Specialization in Artificial Intelligence and Machine Learning
+• GPA: 3.8/4.0
+• Thesis: "Implementing Neural Networks for Predictive Analysis in E-Commerce"
+• Teaching Assistant for Data Structures and Algorithms
+
+<span class="highlight">Bachelor of Science in Software Engineering</span>
+<span class="peach">State University | 2013 - 2017</span>
+• GPA: 3.7/4.0
+• Dean's List: All semesters
+• Led team projects in Software Development Lifecycle course
+• President of Computer Science Student Association
+`;
+        },
+
+        clear: () => {
+          // Keep just the initial prompt line
+          terminal.innerHTML = "";
+          return "";
+        },
+
+        "": () => {
+          return "";
+        },
+      };
+
+      // Process command
+      function processCommand(cmd) {
+        const commandLower = cmd.trim().toLowerCase();
+
+        // Check if command exists
+        if (commands[commandLower]) {
+          return commands[commandLower]();
+        } else {
+          return `Command not found: ${cmd}. Type <span class="highlight">help</span> to see available commands.`;
+        }
+      }
+
+      // Add command to terminal
+      function executeCommand(cmd) {
+        // Save to history if not empty
+        if (cmd.trim() !== "") {
+          commandHistory.unshift(cmd);
+          historyIndex = -1;
+        }
+
+        // Create command line
+        const commandLine = document.createElement("div");
+        commandLine.className = "command-line";
+        commandLine.innerHTML = `<span class="prompt">guest@portfolio:~$</span><span class="command">${cmd}</span>`;
+
+        // Create output
+        const output = document.createElement("div");
+        output.className = "output";
+        output.innerHTML = processCommand(cmd);
+
+        // Remove the current input line with cursor
+        const currentInputLine = document.querySelector(
+          ".command-line:last-child"
+        );
+        if (currentInputLine) {
+          terminal.removeChild(currentInputLine);
+        }
+
+        // Add command and output to terminal
+        terminal.appendChild(commandLine);
+        if (output.innerHTML.trim() !== "") {
+          terminal.appendChild(output);
+        }
+
+        // Add new input line
+        addInputLine();
+
+        // Scroll to bottom
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      // Add input line
+      function addInputLine() {
+        const inputLine = document.createElement("div");
+        inputLine.className = "command-line";
+        inputLine.innerHTML = `<span class="prompt">guest@portfolio:~$</span><span class="command" id="activeCommand"></span><span class="cursor"></span>`;
+        terminal.appendChild(inputLine);
+
+        // Update reference to active command
+        activeCommand = document.getElementById("activeCommand");
+      }
+
+      // Handle typing
+      document.addEventListener("keydown", (e) => {
+        // Only allow typing if userCanType is true
+        if (!userCanType) return;
+
+        if (e.key === "Enter") {
+          executeCommand(currentCommand);
+          currentCommand = "";
+        } else if (e.key === "Backspace") {
+          if (currentCommand.length > 0) {
+            currentCommand = currentCommand.slice(0, -1);
+            activeCommand.textContent = currentCommand;
+          }
+        } else if (e.key === "ArrowUp") {
+          // Navigate history up
+          if (historyIndex < commandHistory.length - 1) {
+            historyIndex++;
+            currentCommand = commandHistory[historyIndex];
+            activeCommand.textContent = currentCommand;
+          }
+        } else if (e.key === "ArrowDown") {
+          // Navigate history down
+          if (historyIndex > 0) {
+            historyIndex--;
+            currentCommand = commandHistory[historyIndex];
+            activeCommand.textContent = currentCommand;
+          } else if (historyIndex === 0) {
+            historyIndex = -1;
+            currentCommand = "";
+            activeCommand.textContent = currentCommand;
+          }
+        } else if (e.key.length === 1) {
+          currentCommand += e.key;
+          activeCommand.textContent = currentCommand;
+        }
+      });
+
+      // Type help command with animation on load
+      let helpText = "help";
+      let charIndex = 0;
+
+      function typeHelpCommand() {
+        if (charIndex < helpText.length) {
+          currentCommand += helpText.charAt(charIndex);
+          activeCommand.textContent = currentCommand;
+          charIndex++;
+          setTimeout(typeHelpCommand, 200);
+        } else {
+          setTimeout(() => {
+            executeCommand(currentCommand);
+            currentCommand = "";
+            // Enable user typing after help command is executed
+            userCanType = true;
+          }, 500);
+        }
+      }
+
+      // Start typing help command after a delay
+      setTimeout(typeHelpCommand, 1000);
+    </script>
+  </body>
+</html>
